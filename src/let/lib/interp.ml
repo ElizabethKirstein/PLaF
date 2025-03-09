@@ -54,7 +54,51 @@ let rec eval_expr : expr -> exp_val ea_result =
     string_of_env >>= fun str ->
     print_endline str; 
     error "Debug called"
-  | _ -> failwith "Not implemented yet!"
+  | Emptylist _ -> return (ListVal [])
+  | Cons (e1, e2) ->
+    eval_expr e1 >>= fun v1 ->
+    eval_expr e2 >>= fun v2 ->
+    (match v2 with
+    | ListVal lst -> return (ListVal (v1 :: lst))
+    | _ -> error "Second argument of cons must be a list!")
+  | Hd e ->
+    eval_expr e >>= fun v ->
+    (match v with
+    | ListVal (h :: _) -> return h
+    | ListVal [] -> error "Cannot take head of an empty list!"
+    | _ -> error "Argument of hd must be a list!")
+  | Tl e ->
+    eval_expr e >>= fun v ->
+    (match v with
+    | ListVal (_ :: t) -> return (ListVal t)
+    | ListVal [] -> error "Cannot take tail of an empty list!"
+    | _ -> error "Argument of tl must be a list!")
+  | IsEmpty e ->
+    eval_expr e >>= fun v ->
+    (match v with
+    | ListVal [] -> return (BoolVal true)
+    | ListVal _ -> return (BoolVal false)
+    | _ -> error "Argument of empty? must be a list!")
+  | Tuple es ->
+    eval_exprs es >>= fun vals ->
+    return (TupleVal vals)
+  | Untuple (ids, e1, e2) ->
+    eval_expr e1 >>= fun v1 ->
+    (match v1 with
+    | TupleVal vals ->
+      if List.length ids = List.length vals then
+        extend_env_list ids vals >>= fun _ -> eval_expr e2
+      else
+        error "extend_env_list: Arguments do not match parameters!"
+    | _ -> error "Expected a tuple!")
+
+and eval_exprs : expr list -> (exp_val list) ea_result = fun es ->
+  match es with
+  | [] -> return []
+  | h :: t ->
+    eval_expr h >>= fun v ->
+    eval_exprs t >>= fun vs ->
+    return (v :: vs)
 
 (** [eval_prog e] evaluates program [e] *)
 let eval_prog (AProg(_,e)) =

@@ -8,6 +8,7 @@ type exp_val =
   | BoolVal of bool
   | PairVal of exp_val*exp_val
   | TupleVal of exp_val list
+  | ListVal of exp_val list
 type env =
   | EmptyEnv
   | ExtendEnv of string*exp_val*env
