@@ -1,0 +1,34 @@
+(* Add exercise 3 *)
+
+let n_left = { data <= 12; left <= 0; right <= 0}    (* 0 in head signals null *)
+in let n_right = { data <= 44; left <= 0; right <= 0}
+in let n_root = { data <= 33; left <= n_left ; right <= n_right }
+in let t1 = { root <= n_root ; length <= 3} 
+in let rec add_helper(nd, x) =
+  if number?(nd) then
+    {data <= x; left <= 0; right <= 0}
+  else if x = nd.data then
+    nd
+  else if x << nd.data then
+    begin
+      nd.left <= add_helper(nd.left, x);
+      nd
+    end
+  else
+    begin
+      nd.right <= add_helper(nd.right, x);
+      nd
+    end
+in
+let add_bt = proc(t, x) {
+  begin
+    t.root <= add_helper(t.root, x);
+    t.length <= if (find_helper(t.root, x)) then t.length else t.length + 1;
+    0
+  end
+} in 
+begin
+  ((add_bt t1) 23);
+  t1.length <= t1.length+1;
+  debug(t1)		
+end
